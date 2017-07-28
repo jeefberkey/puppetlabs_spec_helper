@@ -131,6 +131,14 @@ def fixtures(category)
         target = "spec/fixtures/modules/#{fixture}"
         real_source = eval('"'+opts["repo"]+'"')
         result[real_source] = { "target" => target, "ref" => opts["ref"], "branch" => opts["branch"], "scm" => opts["scm"], "flags" => opts["flags"], "subdir" => opts["subdir"]}
+      elsif opts == :latest
+        # find latest git tag with magic
+      else
+        target = "spec/fixtures/modules/#{fixture}"
+        metadata = Simp::Metadata::Engine.new
+        simp_release = ENV['SIMP_RELEASE'].nil? ? 'master' : ENV['SIMP_RELEASE']
+        simp_modules = metadata.list_components_with_data(simp_release)['/src/puppet/modules']
+        simp_mod_hash = simp_modules # find the module name
       end
     end
   end
@@ -518,7 +526,7 @@ task :compute_dev_version do
   if build = ENV['BUILD_NUMBER'] || ENV['TRAVIS_BUILD_NUMBER']
     if branch.eql? "release"
       new_version = sprintf('%s-%s%04d-%s', version, "r", build, sha)
-    else 
+    else
       new_version = sprintf('%s-%04d-%s', version, build, sha)
     end
   else
