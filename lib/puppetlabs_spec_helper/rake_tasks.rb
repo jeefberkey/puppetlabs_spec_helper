@@ -127,18 +127,23 @@ def fixtures(category)
         target = "spec/fixtures/modules/#{fixture}"
         real_source = eval('"'+source+'"')
         result[real_source] = target
+        $stderr.puts [fixture,target,real_source,result[real_source]].to_s
       elsif opts.instance_of?(Hash)
         target = "spec/fixtures/modules/#{fixture}"
         real_source = eval('"'+opts["repo"]+'"')
         result[real_source] = { "target" => target, "ref" => opts["ref"], "branch" => opts["branch"], "scm" => opts["scm"], "flags" => opts["flags"], "subdir" => opts["subdir"]}
+        $stderr.puts [fixture,target,real_source,result[real_source]].to_s
       elsif opts == :latest
         # find latest git tag with magic
       else
+        require 'simp/metadata'
         target = "spec/fixtures/modules/#{fixture}"
-        metadata = Simp::Metadata::Engine.new
+        simp_metadata = Simp::Metadata::Engine.new
         simp_release = ENV['SIMP_RELEASE'].nil? ? 'master' : ENV['SIMP_RELEASE']
-        simp_modules = metadata.list_components_with_data(simp_release)['/src/puppet/modules']
-        simp_mod_hash = simp_modules # find the module name
+        simp_mod_hash = simp_metadata.component_info(fixture, simp_release)
+        simp_mod_source = simp_mod_hash['source']['primary_source']
+        simp_source = "#{simp_mod_hash['type']}://#{simp_mod_source['host']}/#{simp_mod_source['path']}"
+        result[simp_source] = { "target" => target, "ref" => simp_mod_hash["ref"], "branch" => nil, "scm" => 'git' }
       end
     end
   end
